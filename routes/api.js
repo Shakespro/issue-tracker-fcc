@@ -19,12 +19,10 @@ module.exports = function(app) {
         created_on: new Date(),
         updated_on: new Date(),
         open: true,
-        _id: uuidv4()
+        _id: uuidv4(),
+        assigned_to: assigned_to || '',
+        status_text: status_text || ''
       };
-
-      // Only include assigned_to and status_text if they are provided
-      if (assigned_to) newIssue.assigned_to = assigned_to;
-      if (status_text) newIssue.status_text = status_text;
 
       if (!issues[project]) {
         issues[project] = [];
@@ -35,37 +33,45 @@ module.exports = function(app) {
     })
     .get(function(req, res) {
       let project = req.params.project;
+      let query = req.query;
 
       if (!issues[project]) {
         return res.json([]);
       }
 
-      res.json(issues[project]);
+      let filteredIssues = issues[project].filter(issue => {
+        for (let key in query) {
+          if (issue[key] != query[key]) {
+            return false;
+          }
+        }
+        return true;
+      });
+
+      res.json(filteredIssues);
     })
-    .put(function(req, res) {
+    .put(function (req, res) {
       let project = req.params.project;
-      const { _id, issue_title, issue_text, created_by, assigned_to, status_text, open } = req.body;
+      const { _id, ...updateFields } = req.body;
 
       if (!_id) {
         return res.json({ error: 'missing _id' });
       }
 
-      const issue = issues[project] && issues[project].find(issue => issue._id === _id);
+      if (Object.keys(updateFields).length === 0) {
+        return res.json({ error: 'no update field(s) sent', _id });
+      }
+
+      let projectIssues = issues[project] || [];
+      let issue = projectIssues.find(issue => issue._id === _id);
 
       if (!issue) {
         return res.json({ error: 'could not update', _id });
       }
 
-      if (!issue_title && !issue_text && !created_by && !assigned_to && !status_text && open === undefined) {
-        return res.json({ error: 'no update field(s) sent', _id });
-      }
-
-      if (issue_title) issue.issue_title = issue_title;
-      if (issue_text) issue.issue_text = issue_text;
-      if (created_by) issue.created_by = created_by;
-      if (assigned_to) issue.assigned_to = assigned_to;
-      if (status_text) issue.status_text = status_text;
-      if (open !== undefined) issue.open = open;
+      Object.keys(updateFields).forEach(key => {
+        issue[key] = updateFields[key];
+      });
       issue.updated_on = new Date();
 
       res.json({ result: 'successfully updated', _id });

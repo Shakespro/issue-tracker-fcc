@@ -50,8 +50,8 @@ suite('Functional Tests', function() {
             assert.property(res.body, 'issue_title');
             assert.property(res.body, 'issue_text');
             assert.property(res.body, 'created_by');
-            assert.notProperty(res.body, 'assigned_to'); // Updated assertion here
-            assert.notProperty(res.body, 'status_text'); // Optional field not sent
+            assert.property(res.body, 'assigned_to'); 
+            assert.property(res.body, 'status_text'); 
             assert.property(res.body, 'created_on');
             assert.property(res.body, 'updated_on');
             assert.property(res.body, 'open');
