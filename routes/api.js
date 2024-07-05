@@ -22,8 +22,9 @@ module.exports = function(app) {
         _id: uuidv4()
       };
 
-      newIssue.assigned_to = assigned_to || '';
-      newIssue.status_text = status_text || '';
+      // Only include assigned_to and status_text if they are provided
+      if (assigned_to) newIssue.assigned_to = assigned_to;
+      if (status_text) newIssue.status_text = status_text;
 
       if (!issues[project]) {
         issues[project] = [];
@@ -34,7 +35,7 @@ module.exports = function(app) {
     })
     .get(function(req, res) {
       let project = req.params.project;
-      
+
       if (!issues[project]) {
         return res.json([]);
       }
